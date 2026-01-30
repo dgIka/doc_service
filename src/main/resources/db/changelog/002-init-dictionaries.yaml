@@ -1,0 +1,27 @@
+databaseChangeLog:
+  - changeSet:
+      id: 002-init-dictionaries
+      author: itq
+      changes:
+
+        - insert:
+            tableName: document_status
+            columns:
+              - column: { name: code, value: DRAFT }
+        - insert:
+            tableName: document_status
+            columns:
+              - column: { name: code, value: SUBMITTED }
+        - insert:
+            tableName: document_status
+            columns:
+              - column: { name: code, value: APPROVED }
+
+        - insert:
+            tableName: document_action
+            columns:
+              - column: { name: code, value: SUBMIT }
+        - insert:
+            tableName: document_action
+            columns:
+              - column: { name: code, value: APPROVE }
