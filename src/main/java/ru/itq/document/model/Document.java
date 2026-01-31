@@ -1,11 +1,15 @@
 package ru.itq.document.model;
 
 import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "document")
+@Getter
+@Setter
 public class Document {
 
     @Id
@@ -15,20 +19,20 @@ public class Document {
     @Column(nullable = false, unique = true, length = 64)
     private String number;
 
-    @Column(nullable = false)
+    @Column(name = "author")
     private String author;
 
-    @Column(nullable = false)
+    @Column(name = "title")
     private String title;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "status_id", nullable = false)
+    @JoinColumn(name = "status_id")
     private DocumentStatus status;
 
-    @Column(name = "created_at", nullable = false)
+    @Column(name = "created_at")
     private LocalDateTime createdAt;
 
-    @Column(name = "updated_at", nullable = false)
+    @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 }
 

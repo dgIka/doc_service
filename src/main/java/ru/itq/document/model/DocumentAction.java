@@ -1,9 +1,14 @@
 package ru.itq.document.model;
 
 import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
+import ru.itq.document.model.enums.ActionCode;
 
 @Entity
 @Table(name = "document_action")
+@Getter
+@Setter
 public class DocumentAction {
 
     @Id
@@ -11,7 +16,7 @@ public class DocumentAction {
     private Long id;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false, unique = true)
+    @Column(name = "code")
     private ActionCode code;
 }
 
