@@ -7,20 +7,12 @@ import ru.itq.document.model.Document;
 import ru.itq.document.model.DocumentHistory;
 import ru.itq.document.service.DocumentService;
 
-import java.util.stream.Collectors;
-
 @RestController
 @RequestMapping("/api/documents")
 @RequiredArgsConstructor
 public class DocumentController {
 
     private final DocumentService documentService;
-
-    @GetMapping("/{id}")
-    public DocumentResponse getById(@PathVariable Long id) {
-        Document doc = documentService.getByIdWithHistory(id);
-        return map(doc);
-    }
 
     @PostMapping
     public CreateDocumentResponse create(@RequestBody CreateDocumentRequest request) {
@@ -32,13 +24,24 @@ public class DocumentController {
         return new CreateDocumentResponse(id);
     }
 
+    @GetMapping("/{id}")
+    public DocumentResponse getById(@PathVariable Long id) {
+        Document doc = documentService.getByIdWithHistory(id);
+        return map(doc);
+    }
+
     @PostMapping("/submit")
-    public BatchResultResponse submit(@RequestBody BatchSubmitRequest request) {
-        BatchResultResponse resp = new BatchResultResponse();
-        resp.setResults(
+    public BatchResultResponse submit(@RequestBody BatchRequest request) {
+        return new BatchResultResponse(
                 documentService.submit(request.getIds(), request.getInitiator())
         );
-        return resp;
+    }
+
+    @PostMapping("/approve")
+    public BatchResultResponse approve(@RequestBody BatchRequest request) {
+        return new BatchResultResponse(
+                documentService.approve(request.getIds(), request.getInitiator())
+        );
     }
 
 

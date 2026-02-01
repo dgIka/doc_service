@@ -7,7 +7,7 @@ import java.util.List;
 
 @Getter
 @Setter
-public class BatchSubmitRequest {
+public class BatchRequest {
     private List<Long> ids;
     private String initiator;
 }
