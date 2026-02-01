@@ -120,9 +120,12 @@ public class DocumentServiceImpl implements DocumentService {
             return OperationResult.SUCCESS;
 
         } catch (Exception e) {
-            return to == StatusCode.APPROVED
-                    ? OperationResult.REGISTRY_ERROR
-                    : OperationResult.CONFLICT;
+            if (to == StatusCode.APPROVED) {
+                return OperationResult.REGISTRY_ERROR;
+            } else {
+               return OperationResult.CONFLICT;
+            }
+
         }
     }
 

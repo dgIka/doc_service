@@ -1,4 +1,4 @@
-package ru.itq.document.dto;
+package ru.itq.document.api.dto;
 
 import lombok.Getter;
 import lombok.Setter;

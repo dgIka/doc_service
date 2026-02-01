@@ -5,6 +5,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Entity
 @Table(name = "document")
@@ -28,6 +29,9 @@ public class Document {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "status_id")
     private DocumentStatus status;
+
+    @OneToMany(mappedBy = "document", fetch = FetchType.LAZY)
+    private List<DocumentHistory> history;
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;
