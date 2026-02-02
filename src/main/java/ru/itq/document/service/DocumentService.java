@@ -12,9 +12,11 @@ public interface DocumentService {
 
     Document getByIdWithHistory(Long id);
 
-    List<Document> getByIds(List<Long> ids, Pageable pageable);
+    List<Document> getByIds(List<Long> ids);
 
     Map<Long, OperationResult> submit(List<Long> ids, String initiator);
 
     Map<Long, OperationResult> approve(List<Long> ids, String initiator);
+
+
 }

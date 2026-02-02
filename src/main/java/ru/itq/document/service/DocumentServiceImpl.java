@@ -60,7 +60,7 @@ public class DocumentServiceImpl implements DocumentService {
     }
 
     @Override
-    public List<Document> getByIds(List<Long> ids, Pageable pageable) {
+    public List<Document> getByIds(List<Long> ids) {
         return documentRepo.findByIdIn(ids);
     }
 

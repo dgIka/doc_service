@@ -7,6 +7,8 @@ import ru.itq.document.model.Document;
 import ru.itq.document.model.DocumentHistory;
 import ru.itq.document.service.DocumentService;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/documents")
 @RequiredArgsConstructor
@@ -27,7 +29,7 @@ public class DocumentController {
     @GetMapping("/{id}")
     public DocumentResponse getById(@PathVariable Long id) {
         Document doc = documentService.getByIdWithHistory(id);
-        return map(doc);
+        return toDocumentResponse(doc);
     }
 
     @PostMapping("/submit")
@@ -44,9 +46,36 @@ public class DocumentController {
         );
     }
 
+    @PostMapping("/batch-get")
+    public BatchGetDocumentsResponse batchGet(
+            @RequestBody BatchGetDocumentsRequest request
+    ) {
+        List<DocumentListItemDto> docs = documentService
+                .getByIds(request.getIds())
+                .stream()
+                .map(this::toListItemDto)
+                .toList();
+
+        BatchGetDocumentsResponse resp = new BatchGetDocumentsResponse();
+        resp.setDocuments(docs);
+        return resp;
+    }
+
+    private DocumentListItemDto toListItemDto(Document doc) {
+        DocumentListItemDto dto = new DocumentListItemDto();
+        dto.setId(doc.getId());
+        dto.setNumber(doc.getNumber());
+        dto.setAuthor(doc.getAuthor());
+        dto.setTitle(doc.getTitle());
+        dto.setStatus(doc.getStatus().getCode().name());
+        dto.setCreatedAt(doc.getCreatedAt());
+        dto.setUpdatedAt(doc.getUpdatedAt());
+        return dto;
+    }
 
 
-    private DocumentResponse map(Document doc) {
+
+    private DocumentResponse toDocumentResponse(Document doc) {
         DocumentResponse dto = new DocumentResponse();
         dto.setId(doc.getId());
         dto.setNumber(doc.getNumber());
