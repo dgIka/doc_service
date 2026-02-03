@@ -47,9 +47,7 @@ public class DocumentController {
     }
 
     @PostMapping("/batch-get")
-    public BatchGetDocumentsResponse batchGet(
-            @RequestBody BatchGetDocumentsRequest request
-    ) {
+    public BatchGetDocumentsResponse batchGet(@RequestBody BatchGetDocumentsRequest request) {
         List<DocumentListItemDto> docs = documentService
                 .getByIds(request.getIds())
                 .stream()
@@ -59,6 +57,16 @@ public class DocumentController {
         BatchGetDocumentsResponse resp = new BatchGetDocumentsResponse();
         resp.setDocuments(docs);
         return resp;
+    }
+
+    @PostMapping("/search")
+    public List<DocumentListItemDto> search(@RequestBody SearchDocumentsRequest request) {
+        return documentService.search(
+                request.getStatus(),
+                request.getAuthor(),
+                request.getDateFrom(),
+                request.getDateTo()
+        ).stream().map(this::toListItemDto).toList();
     }
 
     private DocumentListItemDto toListItemDto(Document doc) {

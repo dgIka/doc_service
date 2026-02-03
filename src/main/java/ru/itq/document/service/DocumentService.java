@@ -4,6 +4,7 @@ import org.springframework.data.domain.Pageable;
 import ru.itq.document.model.Document;
 import ru.itq.document.model.enums.OperationResult;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 
@@ -18,5 +19,11 @@ public interface DocumentService {
 
     Map<Long, OperationResult> approve(List<Long> ids, String initiator);
 
+    List<Document> search(
+            String status,
+            String author,
+            LocalDateTime dateFrom,
+            LocalDateTime dateTo
+    );
 
 }

@@ -1,7 +1,6 @@
 package ru.itq.document.service;
 
 import jakarta.transaction.Transactional;
-import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import ru.itq.document.model.*;
 import ru.itq.document.model.enums.ActionCode;
@@ -72,6 +71,19 @@ public class DocumentServiceImpl implements DocumentService {
     @Override
     public Map<Long, OperationResult> approve(List<Long> ids, String initiator) {
         return process(ids, initiator, StatusCode.SUBMITTED, StatusCode.APPROVED, ActionCode.APPROVE);
+    }
+
+    @Override
+    public List<Document> search(
+            String status,
+            String author,
+            LocalDateTime dateFrom,
+            LocalDateTime dateTo
+    ) {
+        StatusCode code = status != null ? StatusCode.valueOf(status) : null;
+        return documentRepo.findAll(
+                DocumentSpecification.search(code, author, dateFrom, dateTo)
+        );
     }
 
     private Map<Long, OperationResult> process(
