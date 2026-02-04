@@ -2,6 +2,9 @@ package ru.itq.document.service;
 
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
+import ru.itq.document.api.exception.BadRequestException;
+import ru.itq.document.api.exception.ConflictException;
+import ru.itq.document.api.exception.NotFoundException;
 import ru.itq.document.model.*;
 import ru.itq.document.model.enums.ActionCode;
 import ru.itq.document.model.enums.StatusCode;
@@ -73,6 +76,42 @@ public class DocumentServiceImpl implements DocumentService {
         return process(ids, initiator, StatusCode.SUBMITTED, StatusCode.APPROVED, ActionCode.APPROVE);
     }
 
+    @Transactional
+    public void approveOne(Long id, String initiator) {
+
+        Document document = documentRepo.findByIdForUpdate(id)
+                .orElseThrow(() -> new NotFoundException("Document not found: " + id));
+
+        if (document.getStatus().getCode() != StatusCode.SUBMITTED) {
+            throw new ConflictException("Document is not in SUBMITTED status");
+        }
+
+        DocumentStatus approved =
+                statusRepo.findByCode(StatusCode.APPROVED).orElseThrow();
+
+        document.setStatus(approved);
+        document.setUpdatedAt(LocalDateTime.now());
+        documentRepo.save(document);
+
+        DocumentAction action =
+                actionRepo.findByCode(ActionCode.APPROVE).orElseThrow();
+
+        DocumentHistory history = new DocumentHistory();
+        history.setDocument(document);
+        history.setAction(action);
+        history.setInitiator(initiator);
+        history.setComment(null);
+        history.setCreatedAt(LocalDateTime.now());
+        historyRepo.save(history);
+
+        ApprovalRegistry registry = new ApprovalRegistry();
+        registry.setDocument(document);
+        registry.setApprovedAt(LocalDateTime.now());
+        registryRepo.save(registry);
+    }
+
+
+
     @Override
     public List<Document> search(
             String status,
@@ -80,7 +119,19 @@ public class DocumentServiceImpl implements DocumentService {
             LocalDateTime dateFrom,
             LocalDateTime dateTo
     ) {
-        StatusCode code = status != null ? StatusCode.valueOf(status) : null;
+        if (dateFrom != null && dateTo != null && dateFrom.isAfter(dateTo)) {
+            throw new BadRequestException("dateFrom must be before dateTo");
+        }
+        StatusCode code = null;
+        if (status != null) {
+            try {
+                code = StatusCode.valueOf(status);
+            } catch (IllegalArgumentException ex) {
+                throw new BadRequestException(
+                        "status must be one of DRAFT, SUBMITTED, APPROVED"
+                );
+            }
+        }
         return documentRepo.findAll(
                 DocumentSpecification.search(code, author, dateFrom, dateTo)
         );
@@ -158,4 +209,7 @@ public class DocumentServiceImpl implements DocumentService {
 
         historyRepo.save(h);
     }
+
+
+
 }

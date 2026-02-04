@@ -1,4 +1,4 @@
-package ru.itq.document.api.dto;
+package ru.itq.document.api.dto.response;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

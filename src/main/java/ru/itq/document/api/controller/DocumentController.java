@@ -1,8 +1,13 @@
 package ru.itq.document.api.controller;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
-import ru.itq.document.api.dto.*;
+import ru.itq.document.api.dto.request.BatchGetDocumentsRequest;
+import ru.itq.document.api.dto.request.BatchRequest;
+import ru.itq.document.api.dto.request.CreateDocumentRequest;
+import ru.itq.document.api.dto.request.SearchDocumentsRequest;
+import ru.itq.document.api.dto.response.*;
 import ru.itq.document.model.Document;
 import ru.itq.document.model.DocumentHistory;
 import ru.itq.document.service.DocumentService;
@@ -17,7 +22,7 @@ public class DocumentController {
     private final DocumentService documentService;
 
     @PostMapping
-    public CreateDocumentResponse create(@RequestBody CreateDocumentRequest request) {
+    public CreateDocumentResponse create(@Valid @RequestBody CreateDocumentRequest request) {
         Long id = documentService.create(
                 request.getAuthor(),
                 request.getTitle(),
@@ -33,21 +38,21 @@ public class DocumentController {
     }
 
     @PostMapping("/submit")
-    public BatchResultResponse submit(@RequestBody BatchRequest request) {
+    public BatchResultResponse submit(@Valid @RequestBody BatchRequest request) {
         return new BatchResultResponse(
                 documentService.submit(request.getIds(), request.getInitiator())
         );
     }
 
     @PostMapping("/approve")
-    public BatchResultResponse approve(@RequestBody BatchRequest request) {
+    public BatchResultResponse approve(@Valid @RequestBody BatchRequest request) {
         return new BatchResultResponse(
                 documentService.approve(request.getIds(), request.getInitiator())
         );
     }
 
     @PostMapping("/batch-get")
-    public BatchGetDocumentsResponse batchGet(@RequestBody BatchGetDocumentsRequest request) {
+    public BatchGetDocumentsResponse batchGet(@Valid @RequestBody BatchGetDocumentsRequest request) {
         List<DocumentListItemDto> docs = documentService
                 .getByIds(request.getIds())
                 .stream()
@@ -60,7 +65,7 @@ public class DocumentController {
     }
 
     @PostMapping("/search")
-    public List<DocumentListItemDto> search(@RequestBody SearchDocumentsRequest request) {
+    public List<DocumentListItemDto> search(@Valid @RequestBody SearchDocumentsRequest request) {
         return documentService.search(
                 request.getStatus(),
                 request.getAuthor(),
