@@ -1,6 +1,7 @@
 package ru.itq.document.service;
 
 import jakarta.transaction.Transactional;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import ru.itq.document.api.exception.BadRequestException;
 import ru.itq.document.api.exception.ConflictException;
@@ -15,6 +16,7 @@ import java.time.LocalDateTime;
 import java.util.*;
 
 @Service
+@RequiredArgsConstructor
 public class DocumentServiceImpl implements DocumentService {
 
     private final DocumentRepository documentRepo;
@@ -22,20 +24,7 @@ public class DocumentServiceImpl implements DocumentService {
     private final DocumentActionRepository actionRepo;
     private final DocumentHistoryRepository historyRepo;
     private final ApprovalRegistryRepository registryRepo;
-
-    public DocumentServiceImpl(
-            DocumentRepository documentRepo,
-            DocumentStatusRepository statusRepo,
-            DocumentActionRepository actionRepo,
-            DocumentHistoryRepository historyRepo,
-            ApprovalRegistryRepository registryRepo
-    ) {
-        this.documentRepo = documentRepo;
-        this.statusRepo = statusRepo;
-        this.actionRepo = actionRepo;
-        this.historyRepo = historyRepo;
-        this.registryRepo = registryRepo;
-    }
+    private final ApproveService approveService;
 
     @Override
     @Transactional
@@ -51,7 +40,6 @@ public class DocumentServiceImpl implements DocumentService {
         doc.setUpdatedAt(LocalDateTime.now());
 
         documentRepo.save(doc);
-        writeHistory(doc, ActionCode.SUBMIT, initiator, "created");
 
         return doc.getId();
     }
@@ -73,44 +61,23 @@ public class DocumentServiceImpl implements DocumentService {
 
     @Override
     public Map<Long, OperationResult> approve(List<Long> ids, String initiator) {
-        return process(ids, initiator, StatusCode.SUBMITTED, StatusCode.APPROVED, ActionCode.APPROVE);
-    }
+        Map<Long, OperationResult> result = new HashMap<>();
 
-    @Transactional
-    public void approveOne(Long id, String initiator) {
-
-        Document document = documentRepo.findByIdForUpdate(id)
-                .orElseThrow(() -> new NotFoundException("Document not found: " + id));
-
-        if (document.getStatus().getCode() != StatusCode.SUBMITTED) {
-            throw new ConflictException("Document is not in SUBMITTED status");
+        for (Long id : ids) {
+            try {
+                approveService.approveOne(id, initiator);
+                result.put(id, OperationResult.SUCCESS);
+            } catch (NotFoundException e) {
+                result.put(id, OperationResult.NOT_FOUND);
+            } catch (ConflictException e) {
+                result.put(id, OperationResult.CONFLICT);
+            } catch (RuntimeException e) {
+                result.put(id, OperationResult.REGISTRY_ERROR);
+            }
         }
 
-        DocumentStatus approved =
-                statusRepo.findByCode(StatusCode.APPROVED).orElseThrow();
-
-        document.setStatus(approved);
-        document.setUpdatedAt(LocalDateTime.now());
-        documentRepo.save(document);
-
-        DocumentAction action =
-                actionRepo.findByCode(ActionCode.APPROVE).orElseThrow();
-
-        DocumentHistory history = new DocumentHistory();
-        history.setDocument(document);
-        history.setAction(action);
-        history.setInitiator(initiator);
-        history.setComment(null);
-        history.setCreatedAt(LocalDateTime.now());
-        historyRepo.save(history);
-
-        ApprovalRegistry registry = new ApprovalRegistry();
-        registry.setDocument(document);
-        registry.setApprovedAt(LocalDateTime.now());
-        registryRepo.save(registry);
+        return result;
     }
-
-
 
     @Override
     public List<Document> search(
@@ -160,13 +127,18 @@ public class DocumentServiceImpl implements DocumentService {
             ActionCode action
     ) {
         Optional<Document> opt = documentRepo.findById(id);
-        if (opt.isEmpty()) return OperationResult.NOT_FOUND;
+        if (opt.isEmpty()) {
+            return OperationResult.NOT_FOUND;
+        }
 
         Document doc = opt.get();
-        if (doc.getStatus().getCode() != from) return OperationResult.CONFLICT;
+        if (doc.getStatus().getCode() != from) {
+            return OperationResult.CONFLICT;
+        }
 
         try {
             DocumentStatus target = statusRepo.findByCode(to).orElseThrow();
+
             doc.setStatus(target);
             doc.setUpdatedAt(LocalDateTime.now());
             documentRepo.save(doc);
