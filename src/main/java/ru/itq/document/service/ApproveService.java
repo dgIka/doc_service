@@ -33,13 +33,6 @@ public class ApproveService {
             throw new ConflictException("Document is not in SUBMITTED status");
         }
 
-        DocumentStatus approved =
-                statusRepo.findByCode(StatusCode.APPROVED).orElseThrow();
-
-        document.setStatus(approved);
-        document.setUpdatedAt(LocalDateTime.now());
-        documentRepo.save(document);
-
         DocumentAction action =
                 actionRepo.findByCode(ActionCode.APPROVE).orElseThrow();
 
@@ -55,6 +48,13 @@ public class ApproveService {
         registry.setDocument(document);
         registry.setApprovedAt(LocalDateTime.now());
         registryRepo.save(registry);
+
+        DocumentStatus approved =
+                statusRepo.findByCode(StatusCode.APPROVED).orElseThrow();
+
+        document.setStatus(approved);
+        document.setUpdatedAt(LocalDateTime.now());
+        documentRepo.save(document);
     }
 }
 
