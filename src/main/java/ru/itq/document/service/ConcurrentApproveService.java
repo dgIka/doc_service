@@ -8,6 +8,7 @@ import ru.itq.document.repository.DocumentRepository;
 import ru.itq.document.api.dto.response.ConcurrentApproveResponse;
 import ru.itq.document.api.exception.ConflictException;
 import ru.itq.document.api.exception.NotFoundException;
+import ru.itq.document.repository.DocumentStatusRepository;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -20,6 +21,7 @@ public class ConcurrentApproveService {
 
     private final ApproveService approveService;
     private final DocumentRepository documentRepository;
+    private final DocumentStatusRepository documentStatusRepository;
 
     public ConcurrentApproveResponse run(Long documentId, int threads, int attempts) {
 
@@ -53,10 +55,11 @@ public class ConcurrentApproveService {
             executor.shutdown();
         }
 
-        Document doc = documentRepository.findById(documentId)
+        Document doc = documentRepository.findByIdWithHistory(documentId)
                 .orElseThrow(() -> new NotFoundException("Document not found: " + documentId));
 
-        StatusCode finalStatus = doc.getStatus().getCode();
+
+        StatusCode finalStatus = documentStatusRepository.findStatusCodeById(doc.getId());
 
         return new ConcurrentApproveResponse(
                 success.get(),
