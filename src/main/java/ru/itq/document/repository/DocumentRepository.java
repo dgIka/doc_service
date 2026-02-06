@@ -1,10 +1,7 @@
 package ru.itq.document.repository;
 
 import jakarta.persistence.LockModeType;
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
-import org.springframework.data.jpa.repository.Lock;
-import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.jpa.repository.*;
 import org.springframework.data.repository.query.Param;
 import ru.itq.document.model.Document;
 
@@ -20,6 +17,14 @@ public interface DocumentRepository extends JpaRepository<Document, Long>, JpaSp
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select d from Document d where d.id = :id")
     Optional<Document> findByIdForUpdate(@Param("id") Long id);
+
+    @EntityGraph(attributePaths = {
+            "status",
+            "history",
+            "history.action"
+    })
+    @Query("select d from Document d where d.id = :id")
+    Optional<Document> findByIdWithHistory(@Param("id") Long id);
 
 }
 

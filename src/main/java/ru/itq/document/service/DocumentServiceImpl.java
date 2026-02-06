@@ -1,13 +1,12 @@
 package ru.itq.document.service;
 
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import ru.itq.document.api.exception.BadRequestException;
 import ru.itq.document.api.exception.ConflictException;
 import ru.itq.document.api.exception.NotFoundException;
 import ru.itq.document.model.*;
-import ru.itq.document.model.enums.ActionCode;
 import ru.itq.document.model.enums.StatusCode;
 import ru.itq.document.repository.*;
 import ru.itq.document.model.enums.OperationResult;
@@ -45,9 +44,10 @@ public class DocumentServiceImpl implements DocumentService {
         return doc.getId();
     }
 
-    @Override
+    @Transactional(readOnly = true)
     public Document getByIdWithHistory(Long id) {
-        return documentRepo.findById(id).orElseThrow();
+        return documentRepo.findByIdWithHistory(id)
+                .orElseThrow(() -> new NotFoundException("Document not found: " + id));
     }
 
     @Override
@@ -119,26 +119,5 @@ public class DocumentServiceImpl implements DocumentService {
                 DocumentSpecification.search(code, author, dateFrom, dateTo)
         );
     }
-
-
-    private void writeHistory(
-            Document doc,
-            ActionCode action,
-            String initiator,
-            String comment
-    ) {
-        DocumentAction act = actionRepo.findByCode(action).orElseThrow();
-
-        DocumentHistory h = new DocumentHistory();
-        h.setDocument(doc);
-        h.setAction(act);
-        h.setInitiator(initiator);
-        h.setComment(comment);
-        h.setCreatedAt(LocalDateTime.now());
-
-        historyRepo.save(h);
-    }
-
-
 
 }
