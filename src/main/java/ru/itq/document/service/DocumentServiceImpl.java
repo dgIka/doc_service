@@ -25,6 +25,7 @@ public class DocumentServiceImpl implements DocumentService {
     private final DocumentHistoryRepository historyRepo;
     private final ApprovalRegistryRepository registryRepo;
     private final ApproveService approveService;
+    private final SubmitService submitService;
 
     @Override
     @Transactional
@@ -56,7 +57,22 @@ public class DocumentServiceImpl implements DocumentService {
 
     @Override
     public Map<Long, OperationResult> submit(List<Long> ids, String initiator) {
-        return process(ids, initiator, StatusCode.DRAFT, StatusCode.SUBMITTED, ActionCode.SUBMIT);
+        Map<Long, OperationResult> result = new HashMap<>();
+
+        for (Long id : ids) {
+            try {
+                submitService.submitOne(id, initiator);
+                result.put(id, OperationResult.SUCCESS);
+            } catch (NotFoundException e) {
+                result.put(id, OperationResult.NOT_FOUND);
+            } catch (ConflictException e) {
+                result.put(id, OperationResult.CONFLICT);
+            } catch (RuntimeException e) {
+                result.put(id, OperationResult.CONFLICT);
+            }
+        }
+
+        return result;
     }
 
     @Override
@@ -104,65 +120,6 @@ public class DocumentServiceImpl implements DocumentService {
         );
     }
 
-    private Map<Long, OperationResult> process(
-            Collection<Long> ids,
-            String initiator,
-            StatusCode from,
-            StatusCode to,
-            ActionCode action
-    ) {
-        Map<Long, OperationResult> result = new HashMap<>();
-        for (Long id : ids) {
-            result.put(id, processOne(id, initiator, from, to, action));
-        }
-        return result;
-    }
-
-    @Transactional
-    protected OperationResult processOne(
-            Long id,
-            String initiator,
-            StatusCode from,
-            StatusCode to,
-            ActionCode action
-    ) {
-        Optional<Document> opt = documentRepo.findById(id);
-        if (opt.isEmpty()) {
-            return OperationResult.NOT_FOUND;
-        }
-
-        Document doc = opt.get();
-        if (doc.getStatus().getCode() != from) {
-            return OperationResult.CONFLICT;
-        }
-
-        try {
-            DocumentStatus target = statusRepo.findByCode(to).orElseThrow();
-
-            doc.setStatus(target);
-            doc.setUpdatedAt(LocalDateTime.now());
-            documentRepo.save(doc);
-
-            writeHistory(doc, action, initiator, null);
-
-            if (to == StatusCode.APPROVED) {
-                ApprovalRegistry reg = new ApprovalRegistry();
-                reg.setDocument(doc);
-                reg.setApprovedAt(LocalDateTime.now());
-                registryRepo.save(reg);
-            }
-
-            return OperationResult.SUCCESS;
-
-        } catch (Exception e) {
-            if (to == StatusCode.APPROVED) {
-                return OperationResult.REGISTRY_ERROR;
-            } else {
-               return OperationResult.CONFLICT;
-            }
-
-        }
-    }
 
     private void writeHistory(
             Document doc,

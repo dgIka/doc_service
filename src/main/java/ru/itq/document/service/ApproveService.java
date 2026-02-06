@@ -1,5 +1,6 @@
 package ru.itq.document.service;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.itq.document.api.exception.ConflictException;
@@ -12,6 +13,7 @@ import ru.itq.document.repository.*;
 import java.time.LocalDateTime;
 
 @Service
+@RequiredArgsConstructor
 public class ApproveService {
 
     private final DocumentRepository documentRepo;
@@ -20,19 +22,6 @@ public class ApproveService {
     private final DocumentActionRepository actionRepo;
     private final DocumentHistoryRepository historyRepo;
 
-    public ApproveService(
-            DocumentRepository documentRepo,
-            DocumentStatusRepository statusRepo,
-            ApprovalRegistryRepository registryRepo,
-            DocumentActionRepository actionRepo,
-            DocumentHistoryRepository historyRepo
-    ) {
-        this.documentRepo = documentRepo;
-        this.statusRepo = statusRepo;
-        this.registryRepo = registryRepo;
-        this.actionRepo = actionRepo;
-        this.historyRepo = historyRepo;
-    }
 
     @Transactional
     public void approveOne(Long id, String initiator) {
