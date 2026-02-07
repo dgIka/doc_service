@@ -25,16 +25,24 @@ public class ApproveWorker {
 
     @Scheduled(fixedDelayString = "${worker.approve.delay-ms}")
     public void run() {
+        long start = System.currentTimeMillis();
+
         List<Long> ids = documentRepository.findIdsByStatus(
                 StatusCode.SUBMITTED,
                 PageRequest.of(0, batchSize)
         );
 
         if (ids.isEmpty()) {
+            log.info("ApproveWorker: no documents to approve");
             return;
         }
 
-        documentService.approve(ids, "submit-worker");
+        log.info("ApproveWorker: approving " + ids.size() + " documents");
+
+        documentService.approve(ids, "approve-worker");
+
+        long duration = System.currentTimeMillis() - start;
+        log.info("ApproveWorker: batch processed, size=" + ids.size() + ", time=" + duration + " ms");
 
     }
 }

@@ -25,16 +25,24 @@ public class SubmitWorker {
 
     @Scheduled(fixedDelayString = "${worker.submit.delay-ms}")
     public void run() {
+        long start = System.currentTimeMillis();
+
         List<Long> ids = documentRepository.findIdsByStatus(
                 StatusCode.DRAFT,
                 PageRequest.of(0, batchSize)
         );
 
         if (ids.isEmpty()) {
+            log.info("SubmitWorker: no documents to submit");
             return;
         }
 
+        log.info("SubmitWorker: approving " + ids.size() + " documents");
+
         documentService.submit(ids, "submit-worker");
+
+        long duration = System.currentTimeMillis() - start;
+        log.info("SubmitWorker: batch processed, size=" + ids.size() + ", time=" + duration + " ms");
 
     }
 }
