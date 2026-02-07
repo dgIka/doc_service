@@ -24,3 +24,8 @@ spring:
 logging:
   level:
     org.hibernate.SQL: off
+
+worker:
+  submit:
+    delay-ms: 5000
+    batch-size: 100

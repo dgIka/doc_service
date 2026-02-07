@@ -1,9 +1,11 @@
 package ru.itq.document.repository;
 
 import jakarta.persistence.LockModeType;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.*;
 import org.springframework.data.repository.query.Param;
 import ru.itq.document.model.Document;
+import ru.itq.document.model.enums.StatusCode;
 
 import java.time.LocalDateTime;
 import java.util.Collection;
@@ -25,6 +27,9 @@ public interface DocumentRepository extends JpaRepository<Document, Long>, JpaSp
     })
     @Query("select d from Document d where d.id = :id")
     Optional<Document> findByIdWithHistory(@Param("id") Long id);
+
+    @Query("select d.id from Document d where d.status.code = :status")
+    List<Long> findIdsByStatus(@Param("status") StatusCode status, Pageable pageable);
 
 }
 
