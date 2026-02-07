@@ -29,3 +29,6 @@ worker:
   submit:
     delay-ms: 5000
     batch-size: 100
+  approve:
+    delay-ms: 5000
+    batch-size: 100
