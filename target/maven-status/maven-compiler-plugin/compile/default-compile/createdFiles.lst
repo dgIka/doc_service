@@ -1,0 +1,5 @@
+ru\itq\document\model\Document.class
+ru\itq\document\model\DocumentHistory.class
+ru\itq\document\model\DocumentAction.class
+ru\itq\document\model\DocumentStatus.class
+ru\itq\document\model\ApprovalRegistry.class

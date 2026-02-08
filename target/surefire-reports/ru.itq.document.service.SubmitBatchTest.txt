@@ -1,0 +1,4 @@
+-------------------------------------------------------------------------------
+Test set: ru.itq.document.service.SubmitBatchTest
+-------------------------------------------------------------------------------
+Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 2.721 s -- in ru.itq.document.service.SubmitBatchTest
