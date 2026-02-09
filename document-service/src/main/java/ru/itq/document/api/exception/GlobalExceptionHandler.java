@@ -39,6 +39,8 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(NotFoundException.class)
     public ResponseEntity<ErrorResponse> handleNotFound(NotFoundException ex) {
+        log.warn("event=api_error type=not_found code={} messages={}",
+                ex.getCode(), ex.getMessages());
         return ResponseEntity
                 .status(HttpStatus.NOT_FOUND)
                 .body(new ErrorResponse(ex.getCode(), ex.getMessages()));
@@ -46,6 +48,8 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(ConflictException.class)
     public ResponseEntity<ErrorResponse> handleConflict(ConflictException ex) {
+        log.warn("event=api_error type=conflict code={} messages={}",
+                ex.getCode(), ex.getMessages());
         return ResponseEntity
                 .status(HttpStatus.CONFLICT)
                 .body(new ErrorResponse(ex.getCode(), ex.getMessages()));

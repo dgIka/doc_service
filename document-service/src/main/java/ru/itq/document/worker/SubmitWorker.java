@@ -33,16 +33,33 @@ public class SubmitWorker {
         );
 
         if (ids.isEmpty()) {
-            log.info("SubmitWorker: no documents to submit");
+            log.info(
+                    "event=submit_worker_empty_batch timeMs={}",
+                    System.currentTimeMillis() - start
+            );
             return;
         }
 
-        log.info("SubmitWorker: approving " + ids.size() + " documents");
+        log.info(
+                "event=submit_worker_start batchSize={}",
+                ids.size()
+        );
 
-        documentService.submit(ids, "submit-worker");
+        try {
+            documentService.submit(ids, "submit-worker");
+        } catch (Exception e) {
+            log.error(
+                    "event=submit_worker_failed batchSize={}",
+                    ids.size(),
+                    e
+            );
+        }
 
-        long duration = System.currentTimeMillis() - start;
-        log.info("SubmitWorker: batch processed, size=" + ids.size() + ", time=" + duration + " ms");
-
+        log.info(
+                "event=submit_worker_finished batchSize={} timeMs={}",
+                ids.size(),
+                System.currentTimeMillis() - start
+        );
     }
 }
+

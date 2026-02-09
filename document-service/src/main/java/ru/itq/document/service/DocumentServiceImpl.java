@@ -1,5 +1,6 @@
 package ru.itq.document.service;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -16,20 +17,22 @@ import java.util.*;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class DocumentServiceImpl implements DocumentService {
 
     private final DocumentRepository documentRepo;
     private final DocumentStatusRepository statusRepo;
-    private final DocumentActionRepository actionRepo;
-    private final DocumentHistoryRepository historyRepo;
-    private final ApprovalRegistryRepository registryRepo;
     private final ApproveService approveService;
     private final SubmitService submitService;
 
     @Override
     @Transactional
     public Long create(String author, String title, String initiator) {
-        DocumentStatus draft = statusRepo.findByCode(StatusCode.DRAFT).orElseThrow();
+        DocumentStatus draft = statusRepo.findByCode(StatusCode.DRAFT)
+                .orElseThrow(() -> {
+                    log.error("event=reference_missing entity=document_status code=DRAFT");
+                    return new IllegalStateException("DRAFT status not found");
+                });
 
         Document doc = new Document();
         doc.setNumber(UUID.randomUUID().toString());
@@ -47,7 +50,10 @@ public class DocumentServiceImpl implements DocumentService {
     @Transactional(readOnly = true)
     public Document getByIdWithHistory(Long id) {
         return documentRepo.findByIdWithHistory(id)
-                .orElseThrow(() -> new NotFoundException("Document not found: " + id));
+                .orElseThrow(() -> {
+                    log.warn("event=document_not_found id={}", id);
+                    return new NotFoundException("Document not found: " + id);
+                });
     }
 
     @Override
@@ -66,6 +72,7 @@ public class DocumentServiceImpl implements DocumentService {
             } catch (NotFoundException e) {
                 result.put(id, OperationResult.NOT_FOUND);
             } catch (ConflictException e) {
+                log.error("event=submit_unexpected_error documentId={}", id, e);
                 result.put(id, OperationResult.CONFLICT);
             } catch (RuntimeException e) {
                 result.put(id, OperationResult.CONFLICT);
@@ -103,6 +110,7 @@ public class DocumentServiceImpl implements DocumentService {
             LocalDateTime dateTo
     ) {
         if (dateFrom != null && dateTo != null && dateFrom.isAfter(dateTo)) {
+            log.warn("event=search_validation_error dateFrom={} dateTo={}", dateFrom, dateTo);
             throw new BadRequestException("dateFrom must be before dateTo");
         }
         StatusCode code = null;
@@ -110,6 +118,7 @@ public class DocumentServiceImpl implements DocumentService {
             try {
                 code = StatusCode.valueOf(status);
             } catch (IllegalArgumentException ex) {
+                log.warn("event=search_validation_error invalid_status={}", status);
                 throw new BadRequestException(
                         "status must be one of DRAFT, SUBMITTED, APPROVED"
                 );

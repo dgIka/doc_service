@@ -1,6 +1,7 @@
 package ru.itq.document.service;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import ru.itq.document.model.Document;
 import ru.itq.document.model.enums.StatusCode;
@@ -17,6 +18,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class ConcurrentApproveService {
 
     private final ApproveService approveService;
@@ -42,6 +44,11 @@ public class ConcurrentApproveService {
                     conflict.incrementAndGet();
                 } catch (RuntimeException e) {
                     registryError.incrementAndGet();
+                    log.error(
+                            "event=concurrent_approve_error documentId={}",
+                            documentId,
+                            e
+                    );
                 }
                 return null;
             });
@@ -51,15 +58,22 @@ public class ConcurrentApproveService {
             executor.invokeAll(tasks);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
+            log.error("event=concurrent_approve_interrupted documentId={}", documentId, e);
         } finally {
             executor.shutdown();
         }
 
         Document doc = documentRepository.findByIdWithHistory(documentId)
-                .orElseThrow(() -> new NotFoundException("Document not found: " + documentId));
-
+                .orElseThrow(() -> {
+                    log.warn("event=document_not_found documentId={}", documentId);
+                    return new NotFoundException("Document not found: " + documentId);
+                });
 
         StatusCode finalStatus = documentStatusRepository.findStatusCodeById(doc.getId());
+        if (finalStatus == null) {
+            log.error("event=final_status_missing documentId={}", documentId);
+            throw new IllegalStateException("Final status not found");
+        }
 
         return new ConcurrentApproveResponse(
                 success.get(),

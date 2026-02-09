@@ -33,16 +33,33 @@ public class ApproveWorker {
         );
 
         if (ids.isEmpty()) {
-            log.info("ApproveWorker: no documents to approve");
+            log.info(
+                    "event=approve_worker_empty_batch timeMs={}",
+                    System.currentTimeMillis() - start
+            );
             return;
         }
 
-        log.info("ApproveWorker: approving " + ids.size() + " documents");
+        log.info(
+                "event=approve_worker_start batchSize={}",
+                ids.size()
+        );
 
-        documentService.approve(ids, "approve-worker");
+        try {
+            documentService.approve(ids, "approve-worker");
+        } catch (Exception e) {
+            log.error(
+                    "event=approve_worker_failed batchSize={}",
+                    ids.size(),
+                    e
+            );
+        }
 
-        long duration = System.currentTimeMillis() - start;
-        log.info("ApproveWorker: batch processed, size=" + ids.size() + ", time=" + duration + " ms");
-
+        log.info(
+                "event=approve_worker_finished batchSize={} timeMs={}",
+                ids.size(),
+                System.currentTimeMillis() - start
+        );
     }
 }
+
