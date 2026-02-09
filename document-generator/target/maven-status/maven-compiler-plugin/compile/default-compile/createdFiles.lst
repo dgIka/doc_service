@@ -1,0 +1,6 @@
+ru\itq\generator\service\UtilClient.class
+ru\itq\generator\service\UtilConfig.class
+ru\itq\generator\service\DocumentGenerator.class
+ru\itq\generator\api\dto\CreateDocumentRequest.class
+ru\itq\generator\runner\GeneratorRunner.class
+ru\itq\generator\DocumentGeneratorApplication.class

@@ -32,7 +32,7 @@ public class DocumentController {
     }
 
     @GetMapping("/{id}")
-    public DocumentResponse getById(@PathVariable Long id) {
+    public DocumentResponse getById(@PathVariable("id") Long id) {
         Document doc = documentService.getByIdWithHistory(id);
         return toDocumentResponse(doc);
     }

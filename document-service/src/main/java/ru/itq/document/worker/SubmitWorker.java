@@ -3,6 +3,7 @@ package ru.itq.document.worker;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Profile;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
@@ -13,6 +14,7 @@ import ru.itq.document.service.DocumentService;
 import java.util.List;
 
 @Component
+@Profile("!test")
 @RequiredArgsConstructor
 @Slf4j
 public class SubmitWorker {

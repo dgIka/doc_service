@@ -72,9 +72,9 @@ public class DocumentServiceImpl implements DocumentService {
             } catch (NotFoundException e) {
                 result.put(id, OperationResult.NOT_FOUND);
             } catch (ConflictException e) {
-                log.error("event=submit_unexpected_error documentId={}", id, e);
                 result.put(id, OperationResult.CONFLICT);
             } catch (RuntimeException e) {
+                log.error("event=submit_unexpected_error documentId={}", id, e);
                 result.put(id, OperationResult.CONFLICT);
             }
         }
